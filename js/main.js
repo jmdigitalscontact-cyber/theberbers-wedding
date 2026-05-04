@@ -7,6 +7,10 @@ const WEDDING = {
   description: "Join us to celebrate our big day",
   dateStart: { year: 2026, month: 11, day: 11 },
 };
+const CALENDAR = {
+  icsPath: "/jason-rhona-wedding.ics",
+  icsFilename: "jason-rhona-wedding.ics",
+};
 
 function pad(n) {
   return String(n).padStart(2, "0");
@@ -51,23 +55,57 @@ function buildICS() {
 }
 
 function downloadICS() {
-  const blob = new Blob([buildICS()], { type: "text/calendar;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
-  a.download = "jason-rhona-wedding.ics";
+  a.href = CALENDAR.icsPath;
+  a.download = CALENDAR.icsFilename;
   a.rel = "noopener";
   document.body.appendChild(a);
   a.click();
-
-  // Some browsers need time to finish navigation before cleanup.
-  window.setTimeout(() => {
-    URL.revokeObjectURL(url);
-    a.remove();
-  }, 1000);
+  a.remove();
 }
 
-document.getElementById("addToCalendar")?.addEventListener("click", downloadICS);
+function isMobileDevice() {
+  return window.matchMedia("(max-width: 900px)").matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function isInAppBrowser() {
+  return /(FBAN|FBAV|Messenger|Instagram|Line|Twitter|TikTok|Snapchat|wv)/i.test(navigator.userAgent);
+}
+
+function openGoogleCalendar() {
+  const { title, description, dateStart } = WEDDING;
+  const startDate = new Date(Date.UTC(dateStart.year, dateStart.month - 1, dateStart.day));
+  const endDate = new Date(startDate);
+  endDate.setUTCDate(endDate.getUTCDate() + 1);
+  const dates = `${formatICSDate(
+    startDate.getUTCFullYear(),
+    startDate.getUTCMonth() + 1,
+    startDate.getUTCDate()
+  )}/${formatICSDate(endDate.getUTCFullYear(), endDate.getUTCMonth() + 1, endDate.getUTCDate())}`;
+
+  const url = new URL("https://calendar.google.com/calendar/render");
+  url.searchParams.set("action", "TEMPLATE");
+  url.searchParams.set("text", title);
+  url.searchParams.set("dates", dates);
+  url.searchParams.set("details", description);
+
+  const popup = window.open(url.toString(), "_blank", "noopener,noreferrer");
+  if (!popup) window.location.href = url.toString();
+}
+
+function handleAddToCalendar(event) {
+  event.preventDefault();
+
+  // In-app browsers (Messenger/Instagram/etc.) often block blob downloads.
+  if (isInAppBrowser() || isMobileDevice()) {
+    openGoogleCalendar();
+    return;
+  }
+
+  downloadICS();
+}
+
+document.getElementById("addToCalendar")?.addEventListener("click", handleAddToCalendar);
 
 /* ---------- Confetti (after heart reveal) ---------- */
 

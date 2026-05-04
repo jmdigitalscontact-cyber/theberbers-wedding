@@ -371,7 +371,7 @@ function setupScratchCanvas() {
 
     requestAnimationFrame(() => {
       if (confettiCelebrated) return;
-      if (estimateScratchRatio() >= 0.75) {
+      if (estimateScratchRatio() >= 0.50) {
         confettiCelebrated = true;
         revealMessageCompletely();
         fireWeddingConfetti(wrap);

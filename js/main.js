@@ -59,8 +59,12 @@ function downloadICS() {
   a.rel = "noopener";
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+
+  // Some browsers need time to finish navigation before cleanup.
+  window.setTimeout(() => {
+    URL.revokeObjectURL(url);
+    a.remove();
+  }, 1000);
 }
 
 document.getElementById("addToCalendar")?.addEventListener("click", downloadICS);
